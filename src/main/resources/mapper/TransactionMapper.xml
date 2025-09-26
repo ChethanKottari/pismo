@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pismo.account.mapper.TransactionMapper">
+
+    <resultMap id="TransactionResponse" type="com.pismo.account.ResponseObjects.TransactionResponse">
+        <id property="txId" column="id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="referenceId" column="reference_id"/>
+        <result property="amount" column="amount"/>
+        <result property="currency" column="currency"/>
+        <result property="operationType" column="operation_type_id"/>
+        <result property="createdAt" column="created_at"/>
+
+    </resultMap>
+
+    <select id="insertTransaction"
+            parameterType="com.pismo.account.RequestObjects.CreateTransaction"
+            resultMap="TransactionResponse">
+        WITH ins AS (
+        INSERT INTO transactions (account_id, amount, currency, operation_type_id, reference_id)
+        VALUES (
+        #{accountId},
+        #{amount},
+        #{currencyCode},
+        #{operationType},
+        #{referenceId}::uuid
+        )
+        ON CONFLICT (reference_id) DO NOTHING
+        RETURNING id, account_id, amount, currency, operation_type_id, reference_id, created_at
+        )
+        SELECT id, account_id, amount, currency,
+        operation_type_id,
+        reference_id, created_at
+        FROM ins
+
+        UNION ALL
+
+        SELECT t.id, t.account_id, t.amount, t.currency,
+        t.operation_type_id,
+        t.reference_id, t.created_at
+        FROM transactions t
+        WHERE t.reference_id = #{referenceId}::uuid
+        AND NOT EXISTS (SELECT 1 FROM ins)
+    </select>
+
+
+
+
+
+</mapper>

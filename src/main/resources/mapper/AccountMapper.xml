@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.pismo.account.mapper.AccountMapper">
+
+    <resultMap id="AccountResponse" type="com.pismo.account.ResponseObjects.AccountResponse">
+        <id property="accountId" column="account_id"/>
+        <result property="documentNumber" column="document_number"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByDocumentNumber" resultMap="AccountResponse">
+        SELECT account_id, document_number, created_at
+        FROM accounts
+        WHERE document_number = #{documentNumber}
+    </select>
+
+    <select id="insertAccountIfNotExists" parameterType="string" resultMap="AccountResponse">
+        WITH ins AS (
+        INSERT INTO accounts (document_number)
+        VALUES (#{documentNumber})
+        ON CONFLICT (document_number) DO NOTHING
+        RETURNING account_id, document_number, created_at
+        )
+        SELECT account_id, document_number, created_at FROM ins
+        UNION ALL
+        SELECT account_id, document_number, created_at FROM accounts
+        WHERE document_number = #{documentNumber}
+        AND NOT EXISTS (SELECT 1 FROM ins)
+    </select>
+
+
+
+    <resultMap id="TransactionResponse" type="com.pismo.account.ResponseObjects.TransactionResponse">
+        <id property="txId" column="id"/>
+        <result property="accountId" column="account_id"/>
+        <result property="referenceId" column="reference_id"/>
+    </resultMap>
+
+</mapper>
