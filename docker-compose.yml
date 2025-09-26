@@ -26,5 +26,18 @@ services:
     depends_on:
       - db
 
+  app:
+    image: chethan777/account-service:latest
+    container_name: accounts-app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/accounts
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: pass
+    ports:
+      - "8085:8085" # map container's 8085 -> host 8085
+
 volumes:
   pgdata:
